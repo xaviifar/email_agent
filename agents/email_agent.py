@@ -12,6 +12,7 @@ if __package__ in (None, ""):
 from langchain.agents import create_agent
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph.state import StateGraph, START, END
+from langchain_core.messages import SystemMessage 
 from langgraph.prebuilt import ToolNode
 
 from external.google_auth_service import google_auth_service
@@ -34,7 +35,13 @@ def should_continue(state: EmailState ):
 def agent_node(state: EmailState, model):
 
     try:
-        response = model.invoke(state["messages"])   
+
+        messages = [
+            SystemMessage(content="You are an email assistant, you need to help user with his Email using GMAIL TOOLS"),
+            *state["messages"]
+        ]
+
+        response = model.invoke(messages)   
         return {"messages": [response]}
 
     except Exception as e:
@@ -44,8 +51,10 @@ def agent_node(state: EmailState, model):
 
 
 
-async def main():
+
+async def email_agent(msg: str):
     api_key = os.getenv("OPENROUTER_API_KEY")
+
 
     if not api_key:
         raise ValueError("Falta OPENROUTER_API_KEY")
@@ -59,12 +68,13 @@ async def main():
     tools = [
         gmail_tools.read_inbox,
         gmail_tools.delete_batch,
-        gmail_tools.search_emails
+        gmail_tools.search_emails,
+        gmail_tools.delete_email
     ]
 
 
     model = ChatOpenRouter(
-        model=os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning:free"),
+        model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3.8-27b:free"),
         api_key=api_key,
     )
 
@@ -95,11 +105,11 @@ async def main():
         "messages": 
         [{
             "role": "user", 
-            "content": "Que correos tengo"
+            "content": "{msg}"
         }]
     })
 
     print(result)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(email_agent(msg="Elimina los correos promocionales de linkedin o notificaciones de linkedin poco importantes"))

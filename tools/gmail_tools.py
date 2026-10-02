@@ -31,6 +31,11 @@ class GmailTools:
                 max_results=limit
             )
 
+        @tool(description="Delete a unique email by ID")
+        async def delete_email(email_id: str):
+            await self.gmail_client.delete(email_id)
+
         self.read_inbox = read_inbox
         self.delete_batch = delete_batch
         self.search_emails = search_emails
+        self.delete_email = delete_email

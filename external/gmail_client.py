@@ -58,8 +58,10 @@ class GmailClient:
         if credentials:
             self.user_creds = {
                 "access_token": credentials.token,
+                "refresh_token": credentials.refresh_token,
                 "expires_at": credentials.expiry.isoformat() if credentials.expiry else None,
             }
+
             self.client_creds = {
                 "client_id": credentials.client_id,
                 "client_secret": credentials.client_secret,

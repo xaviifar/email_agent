@@ -37,7 +37,20 @@ def agent_node(state: EmailState, model):
     try:
 
         messages = [
-            SystemMessage(content="You are an email assistant, you need to help user with his Email using GMAIL TOOLS"),
+            SystemMessage(content="""Eres un agente de gestión y limpieza de correo electrónico. Tu objetivo es mantener la bandeja de entrada organizada y limpia.
+
+                        Analiza el contenido, remitente, asunto y contexto de los correos para determinar si son importantes, promocionales, newsletters, notificaciones, personales u otro tipo de correo relevante.
+
+                        Utiliza las herramientas disponibles para:
+
+                        * Buscar y consultar correos.
+                        * Eliminar correos innecesarios o promocionales.
+                        * Etiquetar y clasificar correos.
+                        * Mover correos cuando sea necesario.
+
+                        Ademas usa las diferentes etiquetas para buscar los correos y tambien hacer limpieza en spam y promociones.
+                        Antes de eliminar o modificar correos, analiza su contenido y asegúrate de que la acción corresponde con la intención del usuario. No inventes información: utiliza siempre los datos obtenidos mediante las herramientas.
+                        """),
             *state["messages"]
         ]
 
@@ -54,7 +67,6 @@ def agent_node(state: EmailState, model):
 
 async def email_agent(msg: str):
     api_key = os.getenv("OPENROUTER_API_KEY")
-
 
     if not api_key:
         raise ValueError("Falta OPENROUTER_API_KEY")
@@ -74,7 +86,7 @@ async def email_agent(msg: str):
 
 
     model = ChatOpenRouter(
-        model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3.8-27b:free"),
+        model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3.7-flash"),
         api_key=api_key,
     )
 
@@ -105,11 +117,11 @@ async def email_agent(msg: str):
         "messages": 
         [{
             "role": "user", 
-            "content": "{msg}"
+            "content": msg
         }]
     })
 
     print(result)
 
 if __name__ == "__main__":
-    asyncio.run(email_agent(msg="Elimina los correos promocionales de linkedin o notificaciones de linkedin poco importantes"))
+    asyncio.run(email_agent(msg="Elimina todas las alertas de seguridad de google"))

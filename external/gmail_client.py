@@ -211,7 +211,7 @@ class GmailClient:
             logger.error(f"Error listing emails: {e}")
             raise GmailAPIError(f"No se pudieron listar los correos: {e}") from e
 
-    async def search(self, query: str, max_results: int = 10) -> List[Dict]:
+    async def search(self, query: str, max_results: int = 25) -> List[Dict]:
         """Search emails using Gmail query syntax.
 
         Automatically appends ``label:INBOX`` when the query does not already

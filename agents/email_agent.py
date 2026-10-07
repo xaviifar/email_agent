@@ -12,16 +12,25 @@ if __package__ in (None, ""):
 from langchain.agents import create_agent
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph.state import StateGraph, START, END
-from langchain_core.messages import SystemMessage 
+from langchain_core.messages import SystemMessage, AIMessage
 from langgraph.prebuilt import ToolNode
 
 from external.google_auth_service import google_auth_service
 from external.gmail_client import GmailClient
+from external.elevenlabs_client import ElevenLabsClient
 
 from states.email_state import EmailState
 from tools.gmail_tools import GmailTools
 
 load_dotenv()
+
+
+def load_prompt(file = "./prompt.txt"):
+
+    with open(file, "+r", encoding="utf-8") as f:
+        prompt = f.read()
+
+    return prompt
 
 def should_continue(state: EmailState ):
 
@@ -31,28 +40,19 @@ def should_continue(state: EmailState ):
         return "tools"
 
     return END
+
+
     
 def agent_node(state: EmailState, model):
+
+    prompt = load_prompt()
 
     try:
 
         messages = [
-            SystemMessage(content="""Eres un agente de gestión y limpieza de correo electrónico. Tu objetivo es mantener la bandeja de entrada organizada y limpia.
+            SystemMessage(content=prompt),
 
-                        Analiza el contenido, remitente, asunto y contexto de los correos para determinar si son importantes, promocionales, newsletters, notificaciones, personales u otro tipo de correo relevante.
-
-                        Utiliza las herramientas disponibles para:
-
-                        * Buscar y consultar correos.
-                        * Eliminar correos innecesarios o promocionales.
-                        * Etiquetar y clasificar correos.
-                        * Mover correos cuando sea necesario.
-
-                        Ademas usa las diferentes etiquetas para buscar los correos y tambien hacer limpieza en spam y promociones.
-                        Antes de eliminar o modificar correos, analiza su contenido y asegúrate de que la acción corresponde con la intención del usuario. No inventes información: utiliza siempre los datos obtenidos mediante las herramientas.
-                        """),
-            *state["messages"]
-        ]
+            *state["messages"]]
 
         response = model.invoke(messages)   
         return {"messages": [response]}
@@ -63,9 +63,11 @@ def agent_node(state: EmailState, model):
 
 
 
+async def email_agent():
+
+    msg = input("Que necesitas? ")
 
 
-async def email_agent(msg: str):
     api_key = os.getenv("OPENROUTER_API_KEY")
 
     if not api_key:
@@ -121,7 +123,22 @@ async def email_agent(msg: str):
         }]
     })
 
-    print(result)
+    msg_r = next(
+        message 
+        for message in reversed(result["messages"])
+        if isinstance(message, AIMessage) and message.content
+    )
+
+    v_client = ElevenLabsClient(
+    api_key=os.getenv("ELEVENLABS_API_KEY"),
+    voice=os.getenv("ELEVENLABS_VOICE"),
+    model= os.getenv("ELEVENLABS_MODEL_TTS"),
+    )
+
+    print(msg_r.content)
+
+    # v_client.tts(text = msg_r.content)
+
 
 if __name__ == "__main__":
-    asyncio.run(email_agent(msg="Elimina todas las alertas de seguridad de google"))
+    asyncio.run(email_agent())

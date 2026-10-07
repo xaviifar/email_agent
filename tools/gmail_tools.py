@@ -35,7 +35,19 @@ class GmailTools:
         async def delete_email(email_id: str):
             await self.gmail_client.delete(email_id)
 
+        @tool(description="Mark read emails by ID")
+        async def mark_read_batch(messages: list[str]):
+            await self.gmail_client.mark_read_batch()
+
+
+        
+
+        
+
         self.read_inbox = read_inbox
         self.delete_batch = delete_batch
         self.search_emails = search_emails
         self.delete_email = delete_email
+        self.mark_read_batch = mark_read_batch
+
+
